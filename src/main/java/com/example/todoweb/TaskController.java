@@ -34,7 +34,7 @@ public class TaskController {
 
     // Toggle done / not done
     @PostMapping("/toggle/{id}")
-    public String toggle(@PathVariable Long id) {
+    public String toggle(@PathVariable String id) {
         Task task = repo.findById(id).orElseThrow();
         task.setCompleted(!task.isCompleted());
         repo.save(task);
@@ -43,7 +43,7 @@ public class TaskController {
 
     // Delete a task
     @PostMapping("/delete/{id}")
-    public String delete(@PathVariable Long id) {
+    public String delete(@PathVariable String id) {
         repo.deleteById(id);
         return "redirect:/";
     }
