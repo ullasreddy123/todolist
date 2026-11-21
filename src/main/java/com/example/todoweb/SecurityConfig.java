@@ -13,7 +13,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login","/style.css", "/manifest.json", "/sw.js",
+                .requestMatchers("/login","/style.css","/theme.js", "/manifest.json", "/sw.js",
                                  "/offline.html", "/icon-192.png", "/icon-512.png").permitAll()
                 .anyRequest().authenticated())
             .oauth2Login(Customizer.withDefaults())
