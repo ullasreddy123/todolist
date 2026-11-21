@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sign in</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#3b82f6">
+</head>
+<body>
+    <div class="container login-box">
+        <h1>My To-Do List</h1>
+        <p>Sign in to see and manage your own tasks.</p>
+
+        <a class="google-btn" th:href="@{/oauth2/authorization/google}">
+            Continue with Google
+        </a>
+
+        <p class="error" th:if="${param.error}">Sign-in failed. Please try again.</p>
+    </div>
+</body>
+</html>

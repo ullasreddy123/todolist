@@ -1,0 +1,17 @@
+# Local secrets
+src/main/resources/application-local.properties
+
+# Build output
+target/
+HELP.md
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+
+# Logs
+*.log
