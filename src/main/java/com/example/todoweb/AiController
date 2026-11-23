@@ -1,0 +1,50 @@
+package com.example.todoweb.controller;
+
+import com.example.todoweb.model.Task;
+import com.example.todoweb.repository.TaskRepository;
+import com.example.todoweb.service.AiService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/ai")
+public class AiController {
+
+    private static final int MAX_TASKS = 30;
+
+    private final TaskRepository taskRepository;
+    private final AiService aiService;
+
+    public AiController(TaskRepository taskRepository, AiService aiService) {
+        this.taskRepository = taskRepository;
+        this.aiService = aiService;
+    }
+
+    @PostMapping("/prioritize")
+    public ResponseEntity<?> prioritize() {
+        // Input checks: only pending tasks, and a size limit
+        List<Task> pending = taskRepository.findAll().stream()
+                .filter(t -> !t.isCompleted())
+                .limit(MAX_TASKS)
+                .toList();
+
+        if (pending.size() < 2) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Add at least 2 pending tasks first."));
+        }
+
+        try {
+            List<Task> ordered = aiService.prioritize(pending);
+            return ResponseEntity.ok(ordered.stream()
+                    .map(t -> Map.of("id", String.valueOf(t.getId()), "title", t.getTitle()))
+                    .toList());
+        } catch (Exception e) {
+            // Error handling: never expose raw errors or the key to the user
+            return ResponseEntity.status(502)
+                    .body(Map.of("error", "AI is unavailable right now. Try again."));
+        }
+    }
+}
