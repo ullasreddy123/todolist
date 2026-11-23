@@ -19,5 +19,33 @@
 
         <p class="error" th:if="${param.error}">Sign-in failed. Please try again.</p>
     </div>
+    <button id="aiBtn">✨ Suggest priority order</button>
+<ol id="aiResult"></ol>
+<p id="aiError" style="color:red"></p>
+
+<script>
+document.getElementById('aiBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('aiBtn');
+  const list = document.getElementById('aiResult');
+  const err = document.getElementById('aiError');
+  list.innerHTML = ''; err.textContent = '';
+  btn.disabled = true; btn.textContent = 'Thinking...';
+
+  try {
+    const res = await fetch('/api/ai/prioritize', { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) { err.textContent = data.error; return; }
+    data.forEach(t => {
+      const li = document.createElement('li');
+      li.textContent = t.title;   // textContent, not innerHTML, to avoid XSS
+      list.appendChild(li);
+    });
+  } catch (e) {
+    err.textContent = 'Something went wrong.';
+  } finally {
+    btn.disabled = false; btn.textContent = '✨ Suggest priority order';
+  }
+});
+</script>
 </body>
 </html>
