@@ -1,9 +1,10 @@
-package com.example.todoweb.controller;
+package com.example.todoweb;
 
-import com.example.todoweb.model.Task;
-import com.example.todoweb.repository.TaskRepository;
-import com.example.todoweb.service.AiService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.Map;
 @RequestMapping("/api/ai")
 public class AiController {
 
+    private static final Logger log = LoggerFactory.getLogger(AiController.class);
     private static final int MAX_TASKS = 30;
 
     private final TaskRepository taskRepository;
@@ -24,9 +26,11 @@ public class AiController {
     }
 
     @PostMapping("/prioritize")
-    public ResponseEntity<?> prioritize() {
-        // Input checks: only pending tasks, and a size limit
-        List<Task> pending = taskRepository.findAll().stream()
+    public ResponseEntity<?> prioritize(@AuthenticationPrincipal OAuth2User user) {
+        String email = user.getAttribute("email");
+
+        // Only THIS user's pending tasks (the old findAll() leaked everyone's tasks)
+        List<Task> pending = taskRepository.findByOwnerEmail(email).stream()
                 .filter(t -> !t.isCompleted())
                 .limit(MAX_TASKS)
                 .toList();
@@ -39,10 +43,10 @@ public class AiController {
         try {
             List<Task> ordered = aiService.prioritize(pending);
             return ResponseEntity.ok(ordered.stream()
-                    .map(t -> Map.of("id", String.valueOf(t.getId()), "title", t.getTitle()))
+                    .map(t -> Map.of("id", t.getId(), "title", t.getTitle()))
                     .toList());
         } catch (Exception e) {
-            // Error handling: never expose raw errors or the key to the user
+            log.error("AI prioritize failed", e);   // full error in server logs only
             return ResponseEntity.status(502)
                     .body(Map.of("error", "AI is unavailable right now. Try again."));
         }
