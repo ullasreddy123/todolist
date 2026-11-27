@@ -1,5 +1,7 @@
 package com.example.todoweb;
-import java.util.List
+
+import java.util.List;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
@@ -59,23 +61,24 @@ public class TaskController {
             .filter(t -> email(user).equals(t.getOwnerEmail()))
             .ifPresent(t -> repo.delete(t));
         return "redirect:/";
-        @PostMapping("/delete-all")
-public String deleteAll(@AuthenticationPrincipal OAuth2User user) {
-    repo.deleteAll(repo.findByOwnerEmail(email(user)));
-    return "redirect:/";
-}
-
-@PostMapping("/delete-selected")
-public String deleteSelected(@RequestParam(required = false) List<String> ids,
-                             @AuthenticationPrincipal OAuth2User user) {
-    if (ids != null && !ids.isEmpty()) {
-        String email = email(user);
-        List<Task> mine = repo.findAllById(ids).stream()
-                .filter(t -> email.equals(t.getOwnerEmail()))
-                .toList();
-        repo.deleteAll(mine);
     }
-    return "redirect:/";
-}
+
+    @PostMapping("/delete-all")
+    public String deleteAll(@AuthenticationPrincipal OAuth2User user) {
+        repo.deleteAll(repo.findByOwnerEmail(email(user)));
+        return "redirect:/";
+    }
+
+    @PostMapping("/delete-selected")
+    public String deleteSelected(@RequestParam(required = false) List<String> ids,
+                                 @AuthenticationPrincipal OAuth2User user) {
+        if (ids != null && !ids.isEmpty()) {
+            String email = email(user);
+            List<Task> mine = repo.findAllById(ids).stream()
+                    .filter(t -> email.equals(t.getOwnerEmail()))
+                    .toList();
+            repo.deleteAll(mine);
+        }
+        return "redirect:/";
     }
 }
