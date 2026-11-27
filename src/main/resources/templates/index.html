@@ -25,9 +25,16 @@
                     <span class="slider"></span>
                 </label>
                 <div class="planner">
-    <textarea id="ideaInput" rows="2" maxlength="500"
-        placeholder="Tell me your plans... e.g. learn Spring Boot course 2 hours, go out with friends, gym"></textarea>
-    <button type="button" id="planBtn" class="btn-ai">🗓️ Schedule with AI</button>
+    <button type="button" id="planToggle" class="btn-ai">🗓️ Schedule with AI</button>
+
+    <div id="planBox" class="plan-box" hidden>
+        <textarea id="ideaInput" rows="3" maxlength="500"
+            placeholder="Tell me your plans... e.g. learn Spring Boot course 2 hours, go out with friends, gym"></textarea>
+        <div class="plan-actions">
+            <button type="button" id="planBtn" class="btn-ai">Generate schedule</button>
+            <button type="button" id="planCancel" class="btn-cancel">Cancel</button>
+        </div>
+    </div>
     <span id="planMsg"></span>
 </div>
                 <form th:action="@{/logout}" method="post">
@@ -47,24 +54,43 @@
     <span id="aiMsg"></span>
 </div>
 
-        <ul>
-           <li th:each="task : ${tasks}" th:attr="data-id=${task.id}">
-               <span class="time" th:if="${task.scheduledTime}" th:text="${task.scheduledTime}"></span>
-                <span th:text="${task.title}"
-                      th:classappend="${task.completed} ? 'done' : ''"></span>
+        <form id="bulkForm" th:action="@{/delete-selected}" method="post"
+      onsubmit="return confirm('Delete the selected tasks?');"></form>
 
-                <div class="actions">
-                    <form th:action="@{/toggle/{id}(id=${task.id})}" method="post">
-                        <button type="submit" class="btn-done">
-                            <span th:text="${task.completed} ? 'Undo' : 'Done'"></span>
-                        </button>
-                    </form>
-                    <form th:action="@{/delete/{id}(id=${task.id})}" method="post">
-                        <button type="submit" class="btn-delete">Delete</button>
-                    </form>
-                </div>
-            </li>
-        </ul>
+<div class="bulk-bar" th:if="${!#lists.isEmpty(tasks)}">
+    <label class="select-all">
+        <input type="checkbox" id="selectAll"> Select all
+    </label>
+    <button type="submit" form="bulkForm" id="delSelected" class="btn-delete" disabled>
+        Delete selected
+    </button>
+    <form th:action="@{/delete-all}" method="post"
+          onsubmit="return confirm('Delete ALL tasks? This cannot be undone.');">
+        <button type="submit" class="btn-delete">Delete all</button>
+    </form>
+</div>
+
+<ul>
+    <li th:each="task : ${tasks}" th:attr="data-id=${task.id}">
+        <div class="task-main">
+            <input type="checkbox" class="sel" name="ids" th:value="${task.id}" form="bulkForm">
+            <span class="time" th:if="${task.scheduledTime}" th:text="${task.scheduledTime}"></span>
+            <span th:text="${task.title}"
+                  th:classappend="${task.completed} ? 'done' : ''"></span>
+        </div>
+
+        <div class="actions">
+            <form th:action="@{/toggle/{id}(id=${task.id})}" method="post">
+                <button type="submit" class="btn-done">
+                    <span th:text="${task.completed} ? 'Undo' : 'Done'"></span>
+                </button>
+            </form>
+            <form th:action="@{/delete/{id}(id=${task.id})}" method="post">
+                <button type="submit" class="btn-delete">Delete</button>
+            </form>
+        </div>
+    </li>
+</ul>
     </div>
 
     <script>
@@ -110,11 +136,29 @@
     });
 </script>
     <script>
+    // ---- AI planner: input hidden until the button is clicked ----
+    const planToggle = document.getElementById("planToggle");
+    const planBox = document.getElementById("planBox");
     const planBtn = document.getElementById("planBtn");
+    const planCancel = document.getElementById("planCancel");
     const planMsg = document.getElementById("planMsg");
+    const ideaInput = document.getElementById("ideaInput");
+
+    planToggle.addEventListener("click", () => {
+        planBox.hidden = false;
+        planToggle.hidden = true;
+        ideaInput.focus();
+    });
+
+    planCancel.addEventListener("click", () => {
+        planBox.hidden = true;
+        planToggle.hidden = false;
+        ideaInput.value = "";
+        planMsg.textContent = "";
+    });
 
     planBtn.addEventListener("click", async () => {
-        const idea = document.getElementById("ideaInput").value.trim();
+        const idea = ideaInput.value.trim();
         if (!idea) { planMsg.textContent = "Type your plans first."; return; }
 
         const token = document.querySelector('meta[name="_csrf"]').content;
@@ -139,9 +183,34 @@
             planMsg.textContent = "Network error. Try again.";
         } finally {
             planBtn.disabled = false;
-            planBtn.textContent = "🗓️ Schedule with AI";
+            planBtn.textContent = "Generate schedule";
         }
     });
+</script>
+
+<script>
+    // ---- Selection for bulk delete ----
+    const selectAll = document.getElementById("selectAll");
+    const delSelected = document.getElementById("delSelected");
+    const boxes = () => [...document.querySelectorAll(".sel")];
+
+    function refreshSelection() {
+        const all = boxes();
+        const checked = all.filter(b => b.checked).length;
+        if (delSelected) {
+            delSelected.disabled = checked === 0;
+            delSelected.textContent = checked ? "Delete selected (" + checked + ")" : "Delete selected";
+        }
+        if (selectAll) selectAll.checked = all.length > 0 && checked === all.length;
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener("change", () => {
+            boxes().forEach(b => b.checked = selectAll.checked);
+            refreshSelection();
+        });
+    }
+    boxes().forEach(b => b.addEventListener("change", refreshSelection));
 </script>
 </body>
 </html>
