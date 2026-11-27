@@ -24,6 +24,12 @@
                     <input type="checkbox" id="themeToggle">
                     <span class="slider"></span>
                 </label>
+                <div class="planner">
+    <textarea id="ideaInput" rows="2" maxlength="500"
+        placeholder="Tell me your plans... e.g. learn Spring Boot course 2 hours, go out with friends, gym"></textarea>
+    <button type="button" id="planBtn" class="btn-ai">🗓️ Schedule with AI</button>
+    <span id="planMsg"></span>
+</div>
                 <form th:action="@{/logout}" method="post">
                     <button type="submit" class="btn-logout">Logout</button>
                 </form>
@@ -43,6 +49,7 @@
 
         <ul>
            <li th:each="task : ${tasks}" th:attr="data-id=${task.id}">
+               <span class="time" th:if="${task.scheduledTime}" th:text="${task.scheduledTime}"></span>
                 <span th:text="${task.title}"
                       th:classappend="${task.completed} ? 'done' : ''"></span>
 
@@ -99,6 +106,40 @@
         } finally {
             aiBtn.disabled = false;
             aiBtn.textContent = "✨ Prioritize";
+        }
+    });
+</script>
+    <script>
+    const planBtn = document.getElementById("planBtn");
+    const planMsg = document.getElementById("planMsg");
+
+    planBtn.addEventListener("click", async () => {
+        const idea = document.getElementById("ideaInput").value.trim();
+        if (!idea) { planMsg.textContent = "Type your plans first."; return; }
+
+        const token = document.querySelector('meta[name="_csrf"]').content;
+        const header = document.querySelector('meta[name="_csrf_header"]').content;
+        const d = new Date();
+        const now = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+
+        planBtn.disabled = true;
+        planBtn.textContent = "Planning...";
+        planMsg.textContent = "";
+
+        try {
+            const res = await fetch("/api/ai/schedule", {
+                method: "POST",
+                headers: { [header]: token, "Content-Type": "application/json" },
+                body: JSON.stringify({ idea, now })
+            });
+            const data = await res.json();
+            if (!res.ok) { planMsg.textContent = data.error || "Something went wrong."; return; }
+            location.reload();
+        } catch (e) {
+            planMsg.textContent = "Network error. Try again.";
+        } finally {
+            planBtn.disabled = false;
+            planBtn.textContent = "🗓️ Schedule with AI";
         }
     });
 </script>
