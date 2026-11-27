@@ -16,6 +16,16 @@
 }
 .btn-ai:disabled { opacity: .6; cursor: wait; }
 #aiMsg { font-size: 14px; opacity: .8; }
+.planner { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+.planner textarea {
+    width: 100%; padding: 10px; border-radius: 8px;
+    border: 1px solid #cbd5e1; font: inherit; resize: vertical; box-sizing: border-box;
+}
+.time {
+    display: inline-block; margin-right: 8px; padding: 2px 8px;
+    background: #e0e7ff; color: #3730a3; border-radius: 6px;
+    font-size: 12px; font-weight: 600;
+}
 
 [data-theme="dark"] {
     --bg: #0f172a;
