@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>My To-Do List</title>
+    <meta name="_csrf" th:content="${_csrf.token}">
+<meta name="_csrf_header" th:content="${_csrf.headerName}">
     <link rel="stylesheet" th:href="@{/style.css}">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#3b82f6">
@@ -34,9 +36,13 @@
             <input type="text" name="title" placeholder="Enter a task..." required>
             <button type="submit">Add</button>
         </form>
+        <div class="ai-bar">
+    <button type="button" id="aiBtn" class="btn-ai">✨ Prioritize</button>
+    <span id="aiMsg"></span>
+</div>
 
         <ul>
-            <li th:each="task : ${tasks}">
+           <li th:each="task : ${tasks}" th:attr="data-id=${task.id}">
                 <span th:text="${task.title}"
                       th:classappend="${task.completed} ? 'done' : ''"></span>
 
@@ -59,5 +65,42 @@
             navigator.serviceWorker.register("/sw.js");
         }
     </script>
+    <script>
+    const aiBtn = document.getElementById("aiBtn");
+    const aiMsg = document.getElementById("aiMsg");
+
+    aiBtn.addEventListener("click", async () => {
+        const token = document.querySelector('meta[name="_csrf"]').content;
+        const header = document.querySelector('meta[name="_csrf_header"]').content;
+
+        aiBtn.disabled = true;
+        aiBtn.textContent = "Thinking...";
+        aiMsg.textContent = "";
+
+        try {
+            const res = await fetch("/api/ai/prioritize", {
+                method: "POST",
+                headers: { [header]: token }
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                aiMsg.textContent = data.error || "Something went wrong.";
+                return;
+            }
+            const list = document.querySelector("ul");
+            // prepend in reverse so the AI's order ends up on top
+            [...data].reverse().forEach(t => {
+                const li = list.querySelector('li[data-id="' + t.id + '"]');
+                if (li) list.prepend(li);
+            });
+            aiMsg.textContent = "Sorted by AI ✨";
+        } catch (e) {
+            aiMsg.textContent = "Network error. Try again.";
+        } finally {
+            aiBtn.disabled = false;
+            aiBtn.textContent = "✨ Prioritize";
+        }
+    });
+</script>
 </body>
 </html>
