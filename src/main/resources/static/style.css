@@ -9,6 +9,13 @@
     --shadow: rgba(0, 0, 0, 0.1);
     --done: #999999;
 }
+.ai-bar { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+.btn-ai {
+    background: #8b5cf6; color: #fff; border: none;
+    padding: 8px 14px; border-radius: 8px; cursor: pointer;
+}
+.btn-ai:disabled { opacity: .6; cursor: wait; }
+#aiMsg { font-size: 14px; opacity: .8; }
 
 [data-theme="dark"] {
     --bg: #0f172a;
