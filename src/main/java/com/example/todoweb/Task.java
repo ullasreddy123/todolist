@@ -16,6 +16,10 @@ public class Task {
     private String ownerEmail;
 
     public Task() {}
+    private String scheduledTime;
+
+public String getScheduledTime() { return scheduledTime; }
+public void setScheduledTime(String scheduledTime) { this.scheduledTime = scheduledTime; }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
